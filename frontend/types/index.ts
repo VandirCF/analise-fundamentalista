@@ -150,3 +150,33 @@ export interface IndicadoresFii {
   /** Liquidez média diária em reais (últimos 2 meses). */
   liquidez: number | null
 }
+
+/** Motivo pelo qual o valuation de Graham não pôde ser calculado. Espelha backend/types. */
+export type MotivoNulo =
+  'SEM_DADO_FUNDAMENTALISTA' | 'LPA_NAO_POSITIVO' | 'VPA_NAO_POSITIVO' | 'SEM_COTACAO'
+
+/** Valuation de Graham de um ativo. Espelha backend/types. */
+export interface Valuation {
+  ticker: string
+  /** Cotação atual em reais, ou null quando indisponível. */
+  cotacao: number | null
+  /** LPA (Lucro por Ação) em reais. Pode ser negativo. */
+  lpa: number | null
+  /** VPA (Valor Patrimonial por Ação) em reais. */
+  vpa: number | null
+  /** Valor intrínseco de Graham em reais. */
+  grahamVI: number | null
+  /** Upside em percentual (25 = +25%). */
+  upsidePct: number | null
+  /** Momento da leitura da cotação atual (ISO 8601). */
+  atualizadoEm: string | null
+  /** Causa do primeiro campo ausente, ou null. */
+  motivoNulo: MotivoNulo | null
+}
+
+/** Ponto da média móvel de 200 pregões. Espelha backend/types. */
+export interface PontoMediaMovel {
+  /** Data do pregão (AAAA-MM-DD). */
+  timestamp: string
+  valor: number
+}

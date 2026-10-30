@@ -43,6 +43,37 @@ export interface Candle {
   volume: number
 }
 
+/** Motivo pelo qual o valuation de Graham não pôde ser calculado (ver specs/02-indicadores.md). */
+export type MotivoNulo =
+  'SEM_DADO_FUNDAMENTALISTA' | 'LPA_NAO_POSITIVO' | 'VPA_NAO_POSITIVO' | 'SEM_COTACAO'
+
+/** Valuation de Graham de um ativo (ver specs/02-indicadores.md e specs/06-contratos-api.md). */
+export interface Valuation {
+  ticker: string
+  /** Cotação atual em reais, ou null quando indisponível. */
+  cotacao: number | null
+  /** LPA (Lucro por Ação) em reais: cotação de referência / P/L. Pode ser negativo. */
+  lpa: number | null
+  /** VPA (Valor Patrimonial por Ação) em reais: cotação de referência / P/VP. */
+  vpa: number | null
+  /** Valor intrínseco de Graham em reais, ou null quando LPA ou VPA não são positivos. */
+  grahamVI: number | null
+  /** Upside em percentual (25 = +25%), com uma casa decimal. Null sem cotação atual ou sem Graham. */
+  upsidePct: number | null
+  /** Momento da leitura da cotação atual (ISO 8601), quando conhecido. */
+  atualizadoEm: string | null
+  /** Causa do primeiro campo ausente, ou null quando o cálculo foi feito. */
+  motivoNulo: MotivoNulo | null
+}
+
+/** Ponto da média móvel de 200 pregões. */
+export interface PontoMediaMovel {
+  /** Data do pregão (AAAA-MM-DD). */
+  timestamp: string
+  /** Média dos fechamentos dos últimos 200 pregões, incluindo o próprio dia. */
+  valor: number
+}
+
 /** Categorias de comunicados da B3 exibidas na tela de fatos relevantes. */
 export const CATEGORIAS_FATO = [
   'Resultado',

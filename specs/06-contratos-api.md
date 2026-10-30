@@ -19,8 +19,16 @@ Rotas novas no backend Fastify. Os parâmetros de query são validados com Zod. 
 }
 ```
 
-- `grahamVI` e `upsidePct` são `null` quando LPA ou VPA não são positivos. `motivoNulo` diz qual foi a causa (ex.: `"LPA_NAO_POSITIVO"`).
+- `grahamVI` é `null` quando LPA ou VPA não são positivos. `upsidePct` é `null` quando não há cotação atual ou o Graham é `null`.
+- `motivoNulo` diz a causa do primeiro campo ausente, com os valores de `02-indicadores.md`: `SEM_DADO_FUNDAMENTALISTA`, `LPA_NAO_POSITIVO`, `VPA_NAO_POSITIVO` ou `SEM_COTACAO`. Ausente é `null`.
 - A interface mostra "—" para qualquer `null`.
+
+## Média móvel de 200 pregões (F6, T-022)
+
+`GET /api/ativos/:ticker/media-movel-200?periodo=1m`
+
+- `periodo` aceita somente `1m`, `3m`, `1y` ou `5y`. Para `1d` e `1w`, responde 400.
+- Retorna `[{ "timestamp": "2026-10-01", "valor": 35.42 }]`, somente para os pregões do período em que a média tem 200 pregões completos. Os pontos sem valor não são enviados.
 
 ## Indicadores trimestrais (F7)
 
