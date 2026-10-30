@@ -662,13 +662,15 @@ Especificação: `specs/02-indicadores.md` (seções Valuation e Médias móveis
 **Dependências:** T-016
 
 **Escopo:**
-- Função pura `calcularGraham(lpa, vpa, cotacao)` em `backend/services/valuationService.ts`, com JSDoc e retorno explícito.
+- Função pura `calcularGraham(lpa, vpa)` e `calcularValuation(...)` em `backend/services/valuationService.ts`, com JSDoc e retorno explícito.
+- LPA = cotação de referência / P/L e VPA = cotação de referência / P/VP (Fundamentus), conforme `specs/02-indicadores.md`.
 - Graham VI = √(22,5 × LPA × VPA) somente quando LPA > 0 e VPA > 0; caso contrário `null` com `motivoNulo`.
-- Upside em percentual com uma casa decimal.
+- Upside em percentual com uma casa decimal, sobre a cotação atual.
 - Rota `GET /api/ativos/:ticker/valuation` (contrato em `specs/06-contratos-api.md`).
+- Primeira introdução de testes unitários no backend (framework Vitest).
 
 **Critério de conclusão:**
-- [ ] Testes unitários com valores calculados à mão, incluindo LPA negativo, VPA zero e cotação ausente
+- [ ] Testes unitários com valores calculados à mão, incluindo P/L negativo, P/VP zero e cotação atual ausente
 - [ ] Rota retorna `null` (e não zero) quando a fórmula não se aplica
 - [ ] Cache `valuation:{ticker}` com TTL de 3600 s, registrado no `CLAUDE.md`
 
@@ -681,13 +683,15 @@ Especificação: `specs/02-indicadores.md` (seções Valuation e Médias móveis
 **Dependências:** T-010
 
 **Escopo:**
-- Calcular MA200 no backend a partir do histórico, com janela completa (sem `min_periods`).
-- Incluir MA200 no gráfico, com o mesmo toggle de MA20 e MA50.
+- Calcular MA200 no backend sobre a série diária completa, com pregões anteriores ao período (aquecimento), conforme `specs/02-indicadores.md`.
+- Rota `GET /api/ativos/:ticker/media-movel-200?periodo=` (contrato em `specs/06-contratos-api.md`).
+- Botão MA200 no gráfico, habilitado somente em 1M, 3M, 1A e 5A.
 
 **Critério de conclusão:**
-- [ ] MA200 aparece somente a partir do 200º pregão de cada série
+- [ ] MA200 aparece somente onde há 200 pregões completos, inclusive em 1M
 - [ ] Teste unitário com série curta confirmando que não há valor parcial
-- [ ] Toggle liga e desliga MA200 sem recarregar o gráfico
+- [ ] Botão MA200 desabilitado em 1D e 1S, com explicação no título do botão
+- [ ] Cache `mm200:{ticker}` com TTL de 3600 s, registrado no `CLAUDE.md`
 
 ---
 

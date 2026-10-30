@@ -49,6 +49,7 @@ Quando estas chaves forem implementadas, a tabela de TTLs do `CLAUDE.md` deve se
 | Dado | Chave Redis | TTL proposto | Motivo |
 |---|---|---|---|
 | Valuation (Graham e upside) | `valuation:{ticker}` | 3600 s | Depende da cotação, que muda durante o dia |
+| Série diária para a MA200 | `mm200:{ticker}` | 3600 s | Série diária completa, usada por todos os períodos diários |
 | Indicadores trimestrais | `indtri:{ticker}` | 86400 s | Muda só com nova demonstração |
 | Ranking por janela | `ranking:{anoFim}` | 86400 s | Calculado sobre dados trimestrais estáveis |
 | Simulação | `simulacao:{hash-dos-parametros}` | 86400 s | Histórico fechado; o hash inclui capital, período e custo |

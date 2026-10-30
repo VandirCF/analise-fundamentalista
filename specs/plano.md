@@ -4,7 +4,7 @@
 
 | Fase | Entrega | Tarefas | Depende de |
 |---|---|---|---|
-| **F6 — Valuation básico** | Graham, upside e MA200 | T-021 a T-023 | Fundamentus já integrado |
+| **F6 — Valuation básico** | Graham, upside e MA200 (com framework de testes unitários) | T-021 a T-023 | Fundamentus e Yahoo já integrados; T-021 introduz o Vitest |
 | **F7 — Histórico trimestral** | Ingestão CVM e indicadores trimestrais | T-024 a T-028 | F6 (reaproveita a camada de cache e o padrão de serviços) |
 | **F8 — Ranking** | Ranking em janelas móveis, sem look-ahead | T-029 a T-031 | F7 |
 | **F9 — Simulação** | Carteira quantitativa vs igualitária | T-032 a T-033 | F8 |
@@ -13,7 +13,7 @@ A fase F5 (qualidade e deploy) continua em andamento, e as fases novas não a bl
 
 ## Ordem sugerida dentro de cada fase
 
-- **F6:** cálculo puro com testes → endpoint → exibição na tela de detalhe.
+- **F6:** configurar o Vitest no backend (T-021) → cálculo puro de Graham com testes → endpoint de valuation → MA200 no backend com aquecimento (T-022) → exibição na tela de detalhe (T-023). A MA200 depende apenas da série diária, então não espera o valuation.
 - **F7:** mapeamento de tickers e um arquivo real validado → parser e testes → migration → job → endpoint → gráfico.
 - **F8:** função pura de ranking com testes de casos conhecidos (ex.: três ativos com valores escolhidos à mão) → verificação da regra de divulgação → endpoint → tela.
 - **F9:** simulador puro com testes → métricas → endpoint → gráfico com aviso.
@@ -21,6 +21,7 @@ A fase F5 (qualidade e deploy) continua em andamento, e as fases novas não a bl
 ## Critérios de sucesso
 
 - Cada fórmula tem teste unitário com valor calculado à mão.
+- A MA200 nunca mostra valor parcial, nem em períodos curtos.
 - Nenhum indicador exibe valor de um período sem divulgação disponível na data de decisão.
 - Nenhum valor ausente aparece como zero na interface.
 - A simulação se comporta de forma idêntica quando executada duas vezes com os mesmos parâmetros.
@@ -35,6 +36,9 @@ A fase F5 (qualidade e deploy) continua em andamento, e as fases novas não a bl
 | Viés de sobrevivência distorcer os resultados | Alta | Aviso explícito na interface (`03-ranking-carteira.md`, seção 6) |
 | Look-ahead por data de divulgação incorreta | Média | Teste que confere a data de divulgação antes de cada decisão |
 | Scraping do Fundamentus quebrar | Média (já existente) | Fallback para o último valor válido com data de leitura |
+| LPA e VPA defasados, pois usam o fechamento do Fundamentus e não o preço atual | Alta | Documentar na interface que o Graham usa o fechamento de referência; o upside usa o preço atual |
+| Yahoo indisponível ou sem série diária longa, deixando a MA200 ausente | Média | Mostrar a MA200 como indisponível com mensagem, sem calcular com dados parciais |
+| Aquecimento da MA200 aumentar o número de requisições ao Yahoo | Média | Cache `mm200:{ticker}` de 3600 s, compartilhado pelos períodos diários |
 | Termos de uso do Yahoo Finance para exibição pública | Baixa a média | Verificar antes de publicar a simulação (`04-fontes-de-dados.md`) |
 
 ## Fora do plano desta etapa

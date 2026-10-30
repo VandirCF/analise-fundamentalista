@@ -33,12 +33,13 @@ Este documento define as fórmulas. Cada indicador tem teste unitário com valor
 
 ## Valuation (F6)
 
-Os dados de Lucro Líquido e Patrimônio vêm do Fundamentus (`fundamentusService`), e a cotação vem da cadeia de cotação já existente.
+Os dados vêm do Fundamentus (`fundamentusService`): cotação de referência (fechamento do último pregão), P/L e P/VP, todos da mesma tabela e do mesmo fechamento. A cotação atual vem da cadeia de cotação já existente.
 
-- **LPA (Lucro por Ação)** = LL_12m / Nº de ações
-- **VPA (Valor Patrimonial por Ação)** = PL / Nº de ações
+- **LPA (Lucro por Ação)** = Cotação de referência / P/L. Equivale a LL_12m / Nº de ações, porque P/L = Cotação / LPA. Usar P/L evita buscar lucro e número de ações em fontes separadas.
+- **VPA (Valor Patrimonial por Ação)** = Cotação de referência / P/VP. Equivale a PL / Nº de ações, pelo mesmo motivo.
 - **Graham VI (Valor Intrínseco)** = √(22,5 × LPA × VPA), **somente** quando LPA > 0 e VPA > 0. Caso contrário, `null`.
-- **Upside (%)** = (Graham VI − Cotação) / Cotação × 100, com uma casa decimal. Positivo indica preço abaixo do valor intrínseco.
+- **Upside (%)** = (Graham VI − Cotação atual) / Cotação atual × 100, com uma casa decimal. Positivo indica preço abaixo do valor intrínseco. O LPA e o VPA não dependem do preço do momento; só o upside depende.
+- **Motivos de nulo** (campo `motivoNulo` da API): `SEM_DADO_FUNDAMENTALISTA` (P/L ou P/VP ausente), `LPA_NAO_POSITIVO` (P/L ≤ 0), `VPA_NAO_POSITIVO` (P/VP ≤ 0), `SEM_COTACAO` (sem preço atual; o Graham existe, mas o upside é `null`).
 
 **Ressalvas exibidas na interface:**
 
@@ -52,4 +53,7 @@ Os dados de Lucro Líquido e Patrimônio vêm do Fundamentus (`fundamentusServic
 
 - **MA20, MA50 e MA200** = média aritmética simples dos fechamentos dos últimos N pregões.
 - Só exibir a média quando houver N pregões completos. O pipeline de referência usava `min_periods=1`, o que mostra uma MA200 parcial nos primeiros 199 pregões. Isso não é permitido.
-- MA200 entra como nova série no gráfico, com o mesmo toggle das médias existentes (T-010).
+- **MA200 é calculada no backend**, sobre a série diária completa, e não sobre os candles visíveis. Um período de 1 mês tem cerca de 21 candles, e a média de 200 pregões nunca apareceria no gráfico se fosse calculada só com eles.
+- A série cobre o mesmo intervalo do gráfico, mas a média usa os pregões anteriores ao início do período (aquecimento). Cada ponto só existe quando há 200 pregões completos.
+- A MA200 só existe para períodos diários (1M, 3M, 1A e 5A). Em 1D e 1S o botão fica desabilitado, porque esses períodos não têm pregões diários.
+- MA20 e MA50 continuam como estão (calculadas no frontend sobre os candles visíveis). Unificar o cálculo fica como melhoria futura, fora da T-022.

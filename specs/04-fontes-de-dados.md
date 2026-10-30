@@ -23,7 +23,7 @@
 
 ## Fundamentus (F6)
 
-- Usado para Lucro Líquido 12 meses, PL, Nº de ações e cotação de referência.
+- Usado para cotação de referência, P/L e P/VP (valuation, F6). Lucro líquido e número de ações não são necessários, pois LPA e VPA saem do P/L e do P/VP (ver `02-indicadores.md`).
 - Página em ISO-8859-1, números em formato pt-BR (CLAUDE.md).
 - Zero em múltiplos significa "não se aplica" (CLAUDE.md). Para Graham, zero em LPA ou VPA já resulta em `null`.
 
