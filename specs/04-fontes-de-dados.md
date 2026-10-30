@@ -19,6 +19,7 @@
 - **Escala:** a coluna `ESCALA_MOEDA` vem como `MIL` nos arquivos verificados (PETR4, 2025). Os valores são multiplicados por 1.000 quando `MIL`. Outros valores de escala (ex.: `UNIDADE`) **não foram verificados**: a implementação deve recusar linhas com escala desconhecida, em vez de assumir. Sem essa conversão, os indicadores que misturam balanço e lucro ficam distorcidos.
 - **Exercício:** a coluna `ORDEM_EXERC` traz `ÚLTIMO` e `PENÚLTIMO`. Usar só `ÚLTIMO` (o exercício corrente da linha). O `PENÚLTIMO` é o ano anterior, já coberto por outra linha.
 - **Acumulados:** o ITR traz linhas de trimestre isolado e linhas acumuladas desde 1º de janeiro. O cálculo usa as acumuladas, pela fórmula de TTM em `02-indicadores.md`.
+- **Balanço (BPA e BPP):** o cabeçalho **não tem** a coluna `DT_INI_EXERC`. Cada linha é um saldo em uma data (`DT_FIM_EXERC` = `DT_REFER`). Nessas linhas, o início do período é a própria data de referência, que é o que a chave única de `DemonstracaoContabil` usa.
 - **Vínculo com o ticker:** o arquivo traz `CD_CVM` (código da companhia, com seis dígitos e zeros à esquerda, ex.: `009512`), não o ticker. O vínculo ticker → código CVM vem do cadastro de valores mobiliários (FCA) e está em `backend/lib/cvmMapeamento.ts`. Não se inventa vínculo: tickers sem código ficam em `NAO_MAPEADOS_CVM`.
 - **Procedimento do mapeamento (manual, em 2026-10-30):**
   1. Baixar `fca_cia_aberta_2025.zip` em `https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/FCA/DADOS/`.

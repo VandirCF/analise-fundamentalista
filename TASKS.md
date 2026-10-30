@@ -781,9 +781,9 @@ Especificação: `specs/02-indicadores.md`, `specs/04-fontes-de-dados.md`, `spec
 - Job trimestral (BullMQ) que recalcula o ano corrente e atualiza os anteriores de forma incremental.
 
 **Critério de conclusão:**
-- [ ] Teste unitário para cada indicador com valores calculados à mão
-- [ ] Liquidez seca sem estoques retorna `null`, e não a liquidez corrente
-- [ ] Job roda manualmente sem erros e grava `IndicadorTrimestral`
+- [x] Teste unitário para cada indicador com valores calculados à mão
+- [x] Liquidez seca sem estoques retorna `null`, e não a liquidez corrente
+- [ ] Job roda manualmente sem erros e grava `IndicadorTrimestral` (script `npm run indicadores:calcular -- 2024 2025` criado; não executado, pois não há banco de teste. O agendamento no BullMQ fica para depois.)
 
 ---
 

@@ -43,6 +43,15 @@ describe('parsearCsvCvm com amostra real (PETR4, 2025)', () => {
     expect(receitaTrimestre?.escala).toBe('MIL')
   })
 
+  it('lê o balanço (BPA), em que DT_INI_EXERC vem vazio e o início é a data de referência', () => {
+    const { linhas, descartadas } = parsearCsvCvm(lerFixture('itr_2025_bpa_petr4.csv'))
+    expect(descartadas).toEqual({})
+    const estoques = linhas.find((l) => l.conta === '1.01.04')
+    expect(estoques?.dtInicioExerc).toBe('2025-03-31')
+    expect(estoques?.dtRefer).toBe('2025-03-31')
+    expect(estoques?.valor).toBe(42779000)
+  })
+
   it('lança erro quando faltam colunas obrigatórias', () => {
     expect(() => parsearCsvCvm('CD_CVM;DT_REFER\n009512;2025-03-31')).toThrow(/sem colunas/)
   })

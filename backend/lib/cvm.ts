@@ -48,7 +48,6 @@ const COLUNAS_OBRIGATORIAS = [
   'VERSAO',
   'ESCALA_MOEDA',
   'ORDEM_EXERC',
-  'DT_INI_EXERC',
   'DT_FIM_EXERC',
   'CD_CONTA',
   'DS_CONTA',
@@ -64,7 +63,8 @@ const DATA_ISO = /^\d{4}-\d{2}-\d{2}$/
 const LinhaCsvSchema = z.object({
   CD_CVM: z.string().regex(/^\d{1,6}$/),
   DT_REFER: z.string().regex(DATA_ISO),
-  DT_INI_EXERC: z.string().regex(DATA_ISO),
+  // Vazio nas linhas de balanço (BPA e BPP), que são de um ponto no tempo: tratado como a dtRefer.
+  DT_INI_EXERC: z.string().refine((v) => v === '' || DATA_ISO.test(v), 'data inválida'),
   DT_FIM_EXERC: z.string().regex(DATA_ISO),
   VERSAO: z
     .string()
@@ -119,9 +119,14 @@ export function parsearCsvCvm(texto: string): ResultadoParsing {
       descartar('COLUNAS_INCOMPLETAS')
       continue
     }
-    const bruto = Object.fromEntries(
-      COLUNAS_OBRIGATORIAS.map((coluna) => [coluna, campos[colunas.indexOf(coluna)]]),
-    )
+    // Os arquivos de balanço (BPA e BPP) não têm DT_INI_EXERC: a linha é de um ponto no tempo.
+    const indiceInicio = colunas.indexOf('DT_INI_EXERC')
+    const bruto = {
+      ...Object.fromEntries(
+        COLUNAS_OBRIGATORIAS.map((coluna) => [coluna, campos[colunas.indexOf(coluna)]]),
+      ),
+      DT_INI_EXERC: indiceInicio === -1 ? '' : campos[indiceInicio],
+    }
     const resultado = LinhaCsvSchema.safeParse(bruto)
     if (!resultado.success) {
       descartar('CAMPO_INVALIDO')
@@ -131,7 +136,7 @@ export function parsearCsvCvm(texto: string): ResultadoParsing {
     validas.push({
       cdCvm: d.CD_CVM.padStart(6, '0'),
       dtRefer: d.DT_REFER,
-      dtInicioExerc: d.DT_INI_EXERC,
+      dtInicioExerc: d.DT_INI_EXERC === '' ? d.DT_REFER : d.DT_INI_EXERC,
       dtFimExerc: d.DT_FIM_EXERC,
       versao: d.VERSAO,
       ordemExerc: d.ORDEM_EXERC,
