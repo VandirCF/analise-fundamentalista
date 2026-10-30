@@ -729,9 +729,9 @@ Especificação: `specs/02-indicadores.md`, `specs/04-fontes-de-dados.md`, `spec
 - Montar o mapeamento ticker → código CVM dos 50 ativos e registrar os que não forem encontrados.
 
 **Critério de conclusão:**
-- [ ] Códigos de conta de cada indicador de `02-indicadores.md` confirmados no arquivo real
-- [ ] Mapeamento gerado, com lista de não mapeados (sem vínculo inventado)
-- [ ] Data de divulgação identificada no arquivo, ou regra de prazo regulatório documentada
+- [x] Códigos de conta de cada indicador de `02-indicadores.md` confirmados no arquivo real (PETR4, ITR e DFP de 2025)
+- [x] Mapeamento gerado, com lista de não mapeados (43 de 50; sem vínculo inventado)
+- [x] Data de divulgação identificada no arquivo, ou regra de prazo regulatório documentada (o arquivo não traz a data; usa-se o prazo regulatório)
 
 ---
 
