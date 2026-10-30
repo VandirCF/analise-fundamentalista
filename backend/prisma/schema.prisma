@@ -55,3 +55,41 @@ model FatoRelevante {
 
   @@index([ativoId, dataPublicacao(sort: Desc)])
 }
+
+/// Linha publicada pela CVM (DFP ou ITR), já validada. Valores em reais (a escala MIL é convertida na carga).
+/// Chave única com dtInicioExerc: o ITR traz o trimestre isolado e o acumulado do ano com a mesma dtRefer.
+model DemonstracaoContabil {
+  id             Int      @id @default(autoincrement())
+  ticker         String
+  cdCvm          String   @db.VarChar(6)
+  /// Um de: DFP (anual) | ITR (trimestral)
+  tipo           String   @db.VarChar(3)
+  dtRefer        DateTime @db.Date
+  dtInicioExerc  DateTime @db.Date
+  versao         Int
+  conta          String   @db.VarChar(20)
+  descricao      String
+  /// Null quando o valor publicado não é numérico.
+  valor          Float?
+  /// Data a partir da qual a demonstração pode ser usada (P3). Prazo regulatório, pois o arquivo não traz a data de recebimento.
+  dataDivulgacao DateTime @db.Date
+
+  @@unique([cdCvm, dtRefer, dtInicioExerc, conta, versao])
+  @@index([ticker, dtRefer])
+}
+
+/// Indicador calculado por trimestre (ver specs/02-indicadores.md).
+model IndicadorTrimestral {
+  id             Int      @id @default(autoincrement())
+  ticker         String
+  ano            Int
+  trimestre      Int
+  /// Um de: ROE | ROA | MARGEM_EBIT | MARGEM_LIQUIDA | MARGEM_EBITDA | DIVIDA_LIQ_PL | DIVIDA_BRUTA_PL | LIQ_CORRENTE | LIQ_SECA | GIRO_ATIVO
+  indicador      String   @db.VarChar(20)
+  /// Null pelas regras de nulo de specs/02-indicadores.md.
+  valor          Float?
+  dataDivulgacao DateTime @db.Date
+  calculadoEm    DateTime @default(now())
+
+  @@unique([ticker, ano, trimestre, indicador])
+}

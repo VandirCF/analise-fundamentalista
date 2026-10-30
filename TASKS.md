@@ -746,8 +746,8 @@ Especificação: `specs/02-indicadores.md`, `specs/04-fontes-de-dados.md`, `spec
 - Migration com `npm run db:migrate`.
 
 **Critério de conclusão:**
-- [ ] Índices únicos criados conforme a especificação
-- [ ] `npm run db:deploy` aplica a migration em banco limpo
+- [x] Índices únicos criados conforme a especificação (verificado pelo SQL gerado com `prisma migrate diff`)
+- [ ] `npm run db:deploy` aplica a migration em banco limpo (não verificado: nenhum banco de teste foi usado, para não alterar o PostgreSQL local)
 
 ---
 
