@@ -651,6 +651,246 @@ Configure Sentry no projeto:
 
 ---
 
+## FASE 6 — Valuation básico
+
+Especificação: `specs/02-indicadores.md` (seções Valuation e Médias móveis).
+
+### T-021 — Fórmula de Graham e upside
+
+**Prioridade:** Alta
+**Estimativa:** 90 min
+**Dependências:** T-016
+
+**Escopo:**
+- Função pura `calcularGraham(lpa, vpa, cotacao)` em `backend/services/valuationService.ts`, com JSDoc e retorno explícito.
+- Graham VI = √(22,5 × LPA × VPA) somente quando LPA > 0 e VPA > 0; caso contrário `null` com `motivoNulo`.
+- Upside em percentual com uma casa decimal.
+- Rota `GET /api/ativos/:ticker/valuation` (contrato em `specs/06-contratos-api.md`).
+
+**Critério de conclusão:**
+- [ ] Testes unitários com valores calculados à mão, incluindo LPA negativo, VPA zero e cotação ausente
+- [ ] Rota retorna `null` (e não zero) quando a fórmula não se aplica
+- [ ] Cache `valuation:{ticker}` com TTL de 3600 s, registrado no `CLAUDE.md`
+
+---
+
+### T-022 — Média móvel MA200
+
+**Prioridade:** Média
+**Estimativa:** 45 min
+**Dependências:** T-010
+
+**Escopo:**
+- Calcular MA200 no backend a partir do histórico, com janela completa (sem `min_periods`).
+- Incluir MA200 no gráfico, com o mesmo toggle de MA20 e MA50.
+
+**Critério de conclusão:**
+- [ ] MA200 aparece somente a partir do 200º pregão de cada série
+- [ ] Teste unitário com série curta confirmando que não há valor parcial
+- [ ] Toggle liga e desliga MA200 sem recarregar o gráfico
+
+---
+
+### T-023 — Exibição de valuation na tela de detalhe
+
+**Prioridade:** Média
+**Estimativa:** 60 min
+**Dependências:** T-021
+
+**Escopo:**
+- Card com Graham VI, upside e LPA e VPA, com tooltip explicando a fórmula e as ressalvas de `specs/02-indicadores.md`.
+- Valores `null` aparecem como "—", com o motivo no tooltip.
+- Formatação somente via `lib/formatters.ts`.
+
+**Critério de conclusão:**
+- [ ] Skeleton durante o carregamento e mensagem de erro com botão de retry
+- [ ] Ressalvas do Graham visíveis no tooltip
+- [ ] Upside positivo e negativo formatados em pt-BR (ex.: `+35,1%`, `-12,4%`)
+
+---
+
+## FASE 7 — Histórico fundamentalista trimestral
+
+Especificação: `specs/02-indicadores.md`, `specs/04-fontes-de-dados.md`, `specs/05-modelo-de-dados.md`, ADR-001.
+
+### T-024 — Mapeamento de tickers para código CVM e arquivo de referência
+
+**Prioridade:** Alta
+**Estimativa:** 60 min
+**Dependências:** nenhuma
+
+**Escopo:**
+- Baixar um DFP e um ITR reais de um ano conhecido e validar os códigos de conta de cada indicador.
+- Gravar o arquivo de referência (amostra reduzida) em `backend/tests/fixtures/cvm/`.
+- Montar o mapeamento ticker → código CVM dos 50 ativos e registrar os que não forem encontrados.
+
+**Critério de conclusão:**
+- [ ] Códigos de conta de cada indicador de `02-indicadores.md` confirmados no arquivo real
+- [ ] Mapeamento gerado, com lista de não mapeados (sem vínculo inventado)
+- [ ] Data de divulgação identificada no arquivo, ou regra de prazo regulatório documentada
+
+---
+
+### T-025 — Modelo Prisma e migration do histórico
+
+**Prioridade:** Alta
+**Estimativa:** 45 min
+**Dependências:** T-024
+
+**Escopo:**
+- Modelos `DemonstracaoContabil` e `IndicadorTrimestral` conforme `specs/05-modelo-de-dados.md`.
+- Migration com `npm run db:migrate`.
+
+**Critério de conclusão:**
+- [ ] Índices únicos criados conforme a especificação
+- [ ] `npm run db:deploy` aplica a migration em banco limpo
+
+---
+
+### T-026 — Parser da CVM com validação Zod
+
+**Prioridade:** Alta
+**Estimativa:** 120 min
+**Dependências:** T-025
+
+**Escopo:**
+- Ler os CSV de DFP e ITR, filtrar o exercício corrente e a versão mais recente.
+- Validar cada linha com schema Zod. Valor não numérico vira `null`.
+- Gravar `DemonstracaoContabil` com `dataDivulgacao`.
+
+**Critério de conclusão:**
+- [ ] Teste com o arquivo de referência de T-024 produz os valores esperados
+- [ ] Linha inválida é registrada no log, sem interromper a carga
+- [ ] Reexecução não duplica registros (índice único)
+
+---
+
+### T-027 — Cálculo dos indicadores trimestrais e job
+
+**Prioridade:** Alta
+**Estimativa:** 120 min
+**Dependências:** T-026
+
+**Escopo:**
+- Funções puras para cada indicador de `02-indicadores.md`, com TTM para fluxos e saldo de fim de trimestre para estoques.
+- Regras de nulo: PL ≤ 0, Receita ≤ 0, estoques ausentes, e assim por diante.
+- Job trimestral (BullMQ) que recalcula o ano corrente e atualiza os anteriores de forma incremental.
+
+**Critério de conclusão:**
+- [ ] Teste unitário para cada indicador com valores calculados à mão
+- [ ] Liquidez seca sem estoques retorna `null`, e não a liquidez corrente
+- [ ] Job roda manualmente sem erros e grava `IndicadorTrimestral`
+
+---
+
+### T-028 — Endpoint e gráfico dos indicadores trimestrais
+
+**Prioridade:** Média
+**Estimativa:** 90 min
+**Dependências:** T-027
+
+**Escopo:**
+- Rota `GET /api/ativos/:ticker/indicadores-trimestrais` (contrato em `specs/06-contratos-api.md`).
+- Painel na tela de detalhe com seleção de indicador e gráfico de série trimestral.
+
+**Critério de conclusão:**
+- [ ] Limite de 20 anos por requisição, validado com Zod
+- [ ] Cada ponto mostra a data de divulgação ao passar o mouse
+- [ ] Valores ausentes aparecem como "—", sem linha ligando zeros
+
+---
+
+## FASE 8 — Ranking por fatores
+
+Especificação: `specs/03-ranking-carteira.md` (seções 1 a 3), ADR-003.
+
+### T-029 — Função de ranking em janelas móveis
+
+**Prioridade:** Alta
+**Estimativa:** 120 min
+**Dependências:** T-027
+
+**Escopo:**
+- Função pura `gerarRanking(anoFim, indicadores)` com as regras de elegibilidade (mínimo de 4 trimestres válidos por indicador), normalização min-max, inversão para dívida/PL e alocação.
+- Filtro por data de divulgação ≤ primeiro pregão do ano de decisão (P3).
+
+**Critério de conclusão:**
+- [ ] Teste com três ativos de valores escolhidos à mão reproduz nota e alocação esperadas
+- [ ] Teste confirma que demonstração divulgada após a data de decisão não entra no cálculo
+- [ ] Ativo inelegível aparece em `avisos`, sem valor zero no ranking
+
+---
+
+### T-030 — Endpoint e tela do ranking
+
+**Prioridade:** Média
+**Estimativa:** 90 min
+**Dependências:** T-029
+
+**Escopo:**
+- Rota `GET /api/ranking?anoFim=` e página com a tabela ordenável, a alocação e os avisos.
+- Aviso de não recomendação e limitações visível na tela (P6).
+
+**Critério de conclusão:**
+- [ ] Seletor de janela altera o ranking sem recarregar a página inteira
+- [ ] Ativos excluídos aparecem com o motivo
+- [ ] Aviso de não recomendação presente
+
+---
+
+### T-031 — Explicação do método na interface
+
+**Prioridade:** Baixa
+**Estimativa:** 45 min
+**Dependências:** T-030
+
+**Escopo:**
+- Bloco expansível com a descrição do método (indicadores, sentido, janela, regra de divulgação) escrito em pt-BR, a partir de `specs/03-ranking-carteira.md`.
+
+**Critério de conclusão:**
+- [ ] Texto corresponde à especificação vigente
+- [ ] Abreviaturas escritas por extenso
+
+---
+
+## FASE 9 — Simulação de carteira
+
+Especificação: `specs/03-ranking-carteira.md` (seções 4 a 6).
+
+### T-032 — Simulador quantitativo vs igualitário
+
+**Prioridade:** Alta
+**Estimativa:** 150 min
+**Dependências:** T-029
+
+**Escopo:**
+- Função pura `simularCarteiras(parametros)` com reinvestimento anual, preços ajustados por dividendos, custo fixo parametrizável e carteira igualitária sobre os mesmos ativos elegíveis.
+- Métricas: retorno total, CAGR, volatilidade anualizada e máximo drawdown.
+
+**Critério de conclusão:**
+- [ ] Teste com série de preços sintética e resultado calculado à mão
+- [ ] Mesmos parâmetros produzem mesmo resultado em duas execuções
+- [ ] Ano sem elegíveis suficientes é marcado como "sem dados", e não entra nas métricas
+
+---
+
+### T-033 — Endpoint e gráfico da simulação
+
+**Prioridade:** Média
+**Estimativa:** 120 min
+**Dependências:** T-032
+
+**Escopo:**
+- Rota `GET /api/simulacao` (contrato em `specs/06-contratos-api.md`) e gráfico comparativo.
+- Bloco de limitações da seção 6 de `specs/03-ranking-carteira.md` e aviso de não recomendação.
+
+**Critério de conclusão:**
+- [ ] Gráfico mostra as duas estratégias com legenda e tooltip em pt-BR
+- [ ] Limitações (viés de sobrevivência, custos, rebalanceamento) visíveis na tela
+- [ ] Aviso de não recomendação presente
+
+---
+
 ## Tarefas de backlog (pós-MVP)
 
 | ID | Descrição | Prioridade |

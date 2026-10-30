@@ -16,9 +16,12 @@ indicadores fundamentalistas.
 
 - **PRD:** `PRD.md` — requisitos, funcionalidades e métricas de sucesso
 - **Tarefas:** `TASKS.md` — todas as tarefas com critérios de conclusão e prompts prontos
+- **Especificações:** `specs/` — SDD do Análise Fundamentalista (constituição, fórmulas, ranking, fontes, ADRs).
+  Fórmulas e regras de cálculo ficam em `specs/`; este arquivo mantém as convenções e os TTLs.
 - **Status atual:** Fases 1, 2 e 3 concluídas. Fase 4 (IA) removida. Fase 5 em andamento:
   testes E2E, CI, configuração de deploy (Vercel e Railway) e Sentry prontos no código.
   Pendente: criar as contas e cadastrar os segredos (ver seção de variáveis de ambiente).
+  Fases 6 a 9 (valuation, histórico trimestral, ranking e simulação) planejadas em `specs/plano.md` (T-021 a T-033).
 
 ---
 
