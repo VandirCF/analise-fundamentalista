@@ -11,6 +11,7 @@ import FatosRelevantes from '@/components/FatosRelevantes'
 import GraficoCandlestick from '@/components/GraficoCandlestick'
 import Indicadores from '@/components/Indicadores'
 import IndicadoresFii from '@/components/IndicadoresFii'
+import ValuationGraham from '@/components/ValuationGraham'
 import { LISTA_REVALIDATE_SEGUNDOS } from '@/lib/constants'
 import {
   ehDeOutroDia,
@@ -149,7 +150,14 @@ export default async function DetalheAtivo({ params }: PropsDetalhe) {
       id: 'indicadores',
       rotulo: 'Indicadores',
       conteudo:
-        ativo.tipo === 'fii' ? <IndicadoresFii ticker={ticker} /> : <Indicadores ticker={ticker} />,
+        ativo.tipo === 'fii' ? (
+          <IndicadoresFii ticker={ticker} />
+        ) : (
+          <div className="space-y-8">
+            <ValuationGraham ticker={ticker} />
+            <Indicadores ticker={ticker} />
+          </div>
+        ),
     },
     {
       id: 'fatos',

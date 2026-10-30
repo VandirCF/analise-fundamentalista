@@ -16,8 +16,10 @@ import {
   type UTCTimestamp,
 } from 'lightweight-charts'
 import useSWR from 'swr'
-import type { Candle, Periodo } from '@/types'
+import type { Candle, PontoMediaMovel, Periodo } from '@/types'
 import { buscarHistorico } from '@/services/historicoService'
+import { buscarMediaMovel200 } from '@/services/mediaMovelService'
+import { alinharMediaMovel } from '@/lib/mediaMovel'
 import { useTema, type Tema } from './ProvedorTema'
 import {
   formatarData,
@@ -35,6 +37,7 @@ const COR_ALTA = '#16A34A'
 const COR_BAIXA = '#DC2626'
 const COR_MEDIA_20 = '#FACC15'
 const COR_MEDIA_50 = '#60A5FA'
+const COR_MEDIA_200 = '#F472B6'
 
 /** Cores de grade, bordas e texto do gráfico, por tema. */
 const CORES_TEMA: Record<Tema, { grade: string; borda: string; texto: string }> = {
@@ -63,6 +66,9 @@ const PERIODOS: { valor: Periodo; rotulo: string }[] = [
 
 /** Períodos com candles intradiários: o eixo e o tooltip mostram também a hora. */
 const PERIODOS_INTRADIARIOS: Periodo[] = ['1d', '1w']
+
+/** Períodos diários: os únicos em que a média de 200 pregões faz sentido (specs/02-indicadores.md). */
+const PERIODOS_MEDIA_200: Periodo[] = ['1m', '3m', '1y', '5y']
 
 interface PropsGrafico {
   ticker: string
@@ -219,6 +225,7 @@ export default function GraficoCandlestick({ ticker }: PropsGrafico) {
   const [rascunho, setRascunho] = useState<IntervaloDatas | null>(null)
   const [mostrarMM20, setMostrarMM20] = useState(false)
   const [mostrarMM50, setMostrarMM50] = useState(false)
+  const [mostrarMM200, setMostrarMM200] = useState(false)
   const [tooltip, setTooltip] = useState<DadosTooltip | null>(null)
 
   const wrapperRef = useRef<HTMLDivElement>(null)
@@ -231,16 +238,26 @@ export default function GraficoCandlestick({ ticker }: PropsGrafico) {
   const volumeSerieRef = useRef<ISeriesApi<'Histogram'> | null>(null)
   const mm20Ref = useRef<ISeriesApi<'Line'> | null>(null)
   const mm50Ref = useRef<ISeriesApi<'Line'> | null>(null)
+  const mm200Ref = useRef<ISeriesApi<'Line'> | null>(null)
 
   // Hoje em Brasília (AAAA-MM-DD), usado como limite das datas e para escolher o período da API.
   const hoje = diaBrasilia(new Date().toISOString())
 
   // Com intervalo aplicado, busca o período da API que cobre a data inicial; senão, usa o botão.
   const periodo: Periodo = aplicado ? periodoParaInicio(aplicado.inicio, hoje) : periodoBotao
+  const podeMediaMovel200 = PERIODOS_MEDIA_200.includes(periodo)
+  const mediaAtiva200 = mostrarMM200 && podeMediaMovel200
 
   const { data, error, isLoading, mutate } = useSWR<Candle[]>(
     ['historico', ticker, periodo],
     () => buscarHistorico(ticker, periodo),
+    { keepPreviousData: true, revalidateOnFocus: false },
+  )
+
+  // Média de 200 pregões: só busca quando o botão está ligado e o período é diário.
+  const { data: media200, error: erroMedia200 } = useSWR<PontoMediaMovel[]>(
+    mediaAtiva200 ? ['media200', ticker, periodo] : null,
+    () => buscarMediaMovel200(ticker, periodo as '1m' | '3m' | '1y' | '5y'),
     { keepPreviousData: true, revalidateOnFocus: false },
   )
 
@@ -411,6 +428,7 @@ export default function GraficoCandlestick({ ticker }: PropsGrafico) {
       volumeSerieRef.current = null
       mm20Ref.current = null
       mm50Ref.current = null
+      mm200Ref.current = null
     }
   }, [])
 
@@ -469,6 +487,27 @@ export default function GraficoCandlestick({ ticker }: PropsGrafico) {
     sincronizar(mostrarMM20, mm20Ref, 20, COR_MEDIA_20)
     sincronizar(mostrarMM50, mm50Ref, 50, COR_MEDIA_50)
   }, [dadosExibidos, mostrarMM20, mostrarMM50])
+
+  // Média de 200 pregões: a série vem do backend com aquecimento; aqui só alinha aos candles.
+  useEffect(() => {
+    const preco = graficoPrecoRef.current
+    if (!preco) return
+    if (mediaAtiva200 && !mm200Ref.current) {
+      mm200Ref.current = preco.addLineSeries({
+        color: COR_MEDIA_200,
+        lineWidth: 2,
+        priceLineVisible: false,
+        lastValueVisible: false,
+      })
+    }
+    if (!mediaAtiva200 && mm200Ref.current) {
+      preco.removeSeries(mm200Ref.current)
+      mm200Ref.current = null
+    }
+    if (mediaAtiva200 && mm200Ref.current && dadosExibidos) {
+      mm200Ref.current.setData(alinharMediaMovel(dadosExibidos, media200 ?? []))
+    }
+  }, [dadosExibidos, mediaAtiva200, media200])
 
   const semDados = dadosExibidos !== undefined && dadosExibidos.length === 0
 
@@ -580,6 +619,11 @@ export default function GraficoCandlestick({ ticker }: PropsGrafico) {
       </div>
 
       <div className="flex flex-wrap items-center justify-end gap-2">
+        {mediaAtiva200 && erroMedia200 && (
+          <span className="text-sm text-slate-400">
+            Média de 200 pregões indisponível agora. Tente novamente em instantes.
+          </span>
+        )}
         <div role="group" aria-label="Médias móveis" className="inline-flex gap-2">
           <BotaoToggle
             ativo={mostrarMM20}
@@ -594,6 +638,19 @@ export default function GraficoCandlestick({ ticker }: PropsGrafico) {
             onClick={() => setMostrarMM50((v) => !v)}
           >
             MA50
+          </BotaoToggle>
+          <BotaoToggle
+            ativo={mediaAtiva200}
+            cor={COR_MEDIA_200}
+            onClick={() => setMostrarMM200((v) => !v)}
+            desabilitado={!podeMediaMovel200}
+            dica={
+              podeMediaMovel200
+                ? 'Média de 200 pregões, com pregões anteriores ao período'
+                : 'Disponível apenas nos períodos 1M, 3M, 1A e 5A'
+            }
+          >
+            MA200
           </BotaoToggle>
         </div>
       </div>
@@ -681,18 +738,24 @@ function BotaoToggle({
   cor,
   onClick,
   children,
+  desabilitado = false,
+  dica,
 }: {
   ativo: boolean
   cor: string
   onClick: () => void
   children: string
+  desabilitado?: boolean
+  dica?: string
 }) {
   return (
     <button
       type="button"
       aria-pressed={ativo}
       onClick={onClick}
-      className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors ${
+      disabled={desabilitado}
+      title={dica}
+      className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
         ativo
           ? 'border-slate-500 text-slate-100'
           : 'border-slate-700 text-slate-400 hover:text-slate-200'

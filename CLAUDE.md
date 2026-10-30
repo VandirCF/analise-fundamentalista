@@ -204,6 +204,8 @@ Ao exibir uma abreviatura, escreva-a com o significado por extenso, ex.: `P/L (P
 | Detalhe do papel no Fundamentus | `fundamentus:detalhe:{ticker}` | 86400s | Valor de mercado e nº de ações mudam pouco |
 | Último valor bom | `ultimo:{ticker}` | 86400s | Exibido quando todas as fontes de cotação falham |
 | Brapi sem acesso | `brapi-sem-acesso:{ticker}` | 21600s | Plano sem o ativo: pula a brapi e segue a cadeia de cotação |
+| Valuation de Graham | `valuation:{ticker}` | 3600s | LPA e VPA vêm do Fundamentus; upside depende da cotação atual (`specs/02-indicadores.md`) |
+| Média móvel de 200 pregões | `mm200:{ticker}` | 3600s | Série diária com aquecimento; cada período recorta a faixa visível (`specs/03-ranking-carteira.md` e `specs/02-indicadores.md`) |
 
 ---
 

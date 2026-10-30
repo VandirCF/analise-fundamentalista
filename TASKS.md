@@ -670,9 +670,9 @@ Especificação: `specs/02-indicadores.md` (seções Valuation e Médias móveis
 - Primeira introdução de testes unitários no backend (framework Vitest).
 
 **Critério de conclusão:**
-- [ ] Testes unitários com valores calculados à mão, incluindo P/L negativo, P/VP zero e cotação atual ausente
-- [ ] Rota retorna `null` (e não zero) quando a fórmula não se aplica
-- [ ] Cache `valuation:{ticker}` com TTL de 3600 s, registrado no `CLAUDE.md`
+- [x] Testes unitários com valores calculados à mão, incluindo P/L negativo, P/VP zero e cotação atual ausente
+- [x] Rota retorna `null` (e não zero) quando a fórmula não se aplica
+- [x] Cache `valuation:{ticker}` com TTL de 3600 s, registrado no `CLAUDE.md`
 
 ---
 
@@ -688,10 +688,10 @@ Especificação: `specs/02-indicadores.md` (seções Valuation e Médias móveis
 - Botão MA200 no gráfico, habilitado somente em 1M, 3M, 1A e 5A.
 
 **Critério de conclusão:**
-- [ ] MA200 aparece somente onde há 200 pregões completos, inclusive em 1M
-- [ ] Teste unitário com série curta confirmando que não há valor parcial
-- [ ] Botão MA200 desabilitado em 1D e 1S, com explicação no título do botão
-- [ ] Cache `mm200:{ticker}` com TTL de 3600 s, registrado no `CLAUDE.md`
+- [ ] MA200 aparece somente onde há 200 pregões completos, inclusive em 1M (regra coberta por teste de serviço; a linha no gráfico ainda não foi vista com dados reais, pois o Yahoo limitou as requisições durante a verificação)
+- [x] Teste unitário com série curta confirmando que não há valor parcial
+- [x] Botão MA200 desabilitado em 1D e 1S, com explicação no título do botão
+- [x] Cache `mm200:{ticker}` com TTL de 3600 s, registrado no `CLAUDE.md`
 
 ---
 
@@ -707,9 +707,9 @@ Especificação: `specs/02-indicadores.md` (seções Valuation e Médias móveis
 - Formatação somente via `lib/formatters.ts`.
 
 **Critério de conclusão:**
-- [ ] Skeleton durante o carregamento e mensagem de erro com botão de retry
-- [ ] Ressalvas do Graham visíveis no tooltip
-- [ ] Upside positivo e negativo formatados em pt-BR (ex.: `+35,1%`, `-12,4%`)
+- [x] Skeleton durante o carregamento e mensagem de erro com botão de retry
+- [x] Ressalvas do Graham visíveis no tooltip
+- [x] Upside positivo e negativo formatados em pt-BR (ex.: `+76,80%`, `-64,50%`, conforme `formatarVariacao`)
 
 ---
 

@@ -6,6 +6,8 @@ import { ativosRoutes } from './routes/ativos'
 import { graficosRoutes } from './routes/graficos'
 import { fatosRoutes } from './routes/fatos'
 import { indicadoresRoutes } from './routes/indicadores'
+import { valuationRoutes } from './routes/valuation'
+import { mediaMovelRoutes } from './routes/mediaMovel'
 import { adminRoutes } from './routes/admin'
 import { iniciarColeta } from './jobs/coletaHistorico'
 import { iniciarAtualizacaoCotacoes } from './jobs/atualizaCotacoes'
@@ -54,6 +56,8 @@ export async function criarServidor(): Promise<FastifyInstance> {
   await app.register(graficosRoutes, { prefix: '/api' })
   await app.register(fatosRoutes, { prefix: '/api' })
   await app.register(indicadoresRoutes, { prefix: '/api' })
+  await app.register(valuationRoutes, { prefix: '/api' })
+  await app.register(mediaMovelRoutes, { prefix: '/api' })
 
   await app.register(adminRoutes)
 
