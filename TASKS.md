@@ -798,7 +798,7 @@ Especificação: `specs/02-indicadores.md`, `specs/04-fontes-de-dados.md`, `spec
 - Painel na tela de detalhe com seleção de indicador e gráfico de série trimestral.
 
 **Critério de conclusão:**
-- [ ] Limite de 20 anos por requisição, validado com Zod
+- [x] Limite de 20 anos por requisição, validado com Zod (testes de recorte; a validação de intervalo está na rota)
 - [ ] Cada ponto mostra a data de divulgação ao passar o mouse
 - [ ] Valores ausentes aparecem como "—", sem linha ligando zeros
 
