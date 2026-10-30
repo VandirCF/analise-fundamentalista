@@ -763,9 +763,9 @@ Especificação: `specs/02-indicadores.md`, `specs/04-fontes-de-dados.md`, `spec
 - Gravar `DemonstracaoContabil` com `dataDivulgacao`.
 
 **Critério de conclusão:**
-- [ ] Teste com o arquivo de referência de T-024 produz os valores esperados
-- [ ] Linha inválida é registrada no log, sem interromper a carga
-- [ ] Reexecução não duplica registros (índice único)
+- [x] Teste com o arquivo de referência de T-024 produz os valores esperados
+- [x] Linha inválida é contada por motivo e registrada no log, sem interromper a carga
+- [ ] Reexecução não duplica registros (índice único; `skipDuplicates` no código, não verificado em banco)
 
 ---
 
