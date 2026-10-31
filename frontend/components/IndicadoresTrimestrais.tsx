@@ -152,7 +152,8 @@ export default function IndicadoresTrimestrais({ ticker }: { ticker: string }) {
     [pontos],
   )
 
-  const wrapperRef = useRef<HTMLDivElement>(null)
+  // Ref de callback: o efeito que cria o gráfico roda quando o container existir, que pode ser depois da montagem (o skeleton aparece antes dos dados).
+  const [wrapper, setWrapper] = useState<HTMLDivElement | null>(null)
   const graficoRef = useRef<IChartApi | null>(null)
   const serieRef = useRef<ISeriesApi<'Line'> | null>(null)
   // O callback do tooltip é criado uma vez; estas refs leem sempre os valores atuais.
@@ -163,7 +164,7 @@ export default function IndicadoresTrimestrais({ ticker }: { ticker: string }) {
 
   // Cria o gráfico uma vez e o destrói ao sair.
   useEffect(() => {
-    const container = wrapperRef.current
+    const container = wrapper
     if (!container) return
     const cores = coresDoTema(tema)
     const grafico = createChart(container, {
@@ -200,7 +201,11 @@ export default function IndicadoresTrimestrais({ ticker }: { ticker: string }) {
       setTooltip({ texto, x: param.point.x, y: param.point.y })
     })
 
-    const redimensionar = (): void => grafico.applyOptions({ width: container.clientWidth })
+    // Ao mudar a largura, reajusta a escala: o ajuste inicial pode ter rodado com largura zero.
+    const redimensionar = (): void => {
+      grafico.applyOptions({ width: container.clientWidth })
+      grafico.timeScale().fitContent()
+    }
     redimensionar()
     const observador = new ResizeObserver(redimensionar)
     observador.observe(container)
@@ -211,9 +216,8 @@ export default function IndicadoresTrimestrais({ ticker }: { ticker: string }) {
       graficoRef.current = null
       serieRef.current = null
     }
-    // Criação única: os dados e o tema são atualizados por efeitos próprios.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    // Os dados e o tema são atualizados por efeitos próprios; aqui só o ciclo de vida do gráfico.
+  }, [wrapper, tema])
 
   // Atualiza a série ao trocar de indicador ou chegar novo dado. Só desenha trimestres com valor.
   useEffect(() => {
@@ -225,7 +229,7 @@ export default function IndicadoresTrimestrais({ ticker }: { ticker: string }) {
     }))
     serie.setData(linhas)
     graficoRef.current?.timeScale().fitContent()
-  }, [comValor, definicao.percentual])
+  }, [comValor, definicao.percentual, wrapper])
 
   // Cores do gráfico acompanham o tema.
   useEffect(() => {
@@ -294,7 +298,7 @@ export default function IndicadoresTrimestrais({ ticker }: { ticker: string }) {
 
       <div className="relative">
         <div
-          ref={wrapperRef}
+          ref={setWrapper}
           className="w-full"
           role="img"
           aria-label={`Gráfico de ${definicao.rotulo}`}

@@ -1,4 +1,5 @@
 import { prisma } from '../lib/db'
+import { MAPEAMENTO_CVM } from '../lib/cvmMapeamento'
 import { logger } from '../lib/logger'
 import {
   calcularIndicadoresTrimestrais,
@@ -84,9 +85,13 @@ export async function recalcularIndicadoresTicker(
   const anoMin = Math.min(...anos) - 1
   const anoMax = Math.max(...anos)
 
+  // Demonstrações são da companhia (código CVM), que pode ter mais de um ticker.
+  const cdCvm = MAPEAMENTO_CVM[ticker]
+  if (cdCvm === undefined) throw new Error(`Ticker sem código CVM: ${ticker}`)
+
   const linhas = await prisma.demonstracaoContabil.findMany({
     where: {
-      ticker,
+      cdCvm,
       conta: { in: [...TODAS_CONTAS] },
       dtRefer: {
         gte: new Date(`${anoMin}-01-01T00:00:00Z`),

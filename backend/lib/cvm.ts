@@ -135,8 +135,9 @@ export function parsearCsvCvm(texto: string): ResultadoParsing {
     const d = resultado.data
     validas.push({
       cdCvm: d.CD_CVM.padStart(6, '0'),
-      dtRefer: d.DT_REFER,
-      dtInicioExerc: d.DT_INI_EXERC === '' ? d.DT_REFER : d.DT_INI_EXERC,
+      // DT_REFER é a data do documento, igual para ÚLTIMO e PENÚLTIMO. O período é DT_FIM_EXERC.
+      dtRefer: d.DT_FIM_EXERC,
+      dtInicioExerc: d.DT_INI_EXERC === '' ? d.DT_FIM_EXERC : d.DT_INI_EXERC,
       dtFimExerc: d.DT_FIM_EXERC,
       versao: d.VERSAO,
       ordemExerc: d.ORDEM_EXERC,
@@ -192,7 +193,12 @@ export function montarDemonstracoes(
   linhas: readonly LinhaCvm[],
   tipo: TipoDemonstracao,
 ): { registros: DemonstracaoRegistro[]; descartadas: Record<string, number> } {
-  const tickerPorCvm = new Map(Object.entries(MAPEAMENTO_CVM).map(([t, c]) => [c, t]))
+  // Uma companhia pode ter mais de um ticker (ex.: PETR3 e PETR4). As demonstrações são guardadas uma vez por código CVM,
+  // com o primeiro ticker do mapeamento como referência. Os indicadores valem para todos os tickers da companhia.
+  const tickerPorCvm = new Map<string, string>()
+  for (const [ticker, cdCvm] of Object.entries(MAPEAMENTO_CVM)) {
+    if (!tickerPorCvm.has(cdCvm)) tickerPorCvm.set(cdCvm, ticker)
+  }
   const descartadas: Record<string, number> = {}
   const descartar = (motivo: string): void => {
     descartadas[motivo] = (descartadas[motivo] ?? 0) + 1
