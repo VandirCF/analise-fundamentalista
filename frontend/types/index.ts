@@ -180,3 +180,31 @@ export interface PontoMediaMovel {
   timestamp: string
   valor: number
 }
+
+/** Indicadores trimestrais, na ordem de exibição. Espelha backend/lib/indicadoresTrimestrais. */
+export const INDICADORES_TRIMESTRAIS = [
+  'ROE',
+  'ROA',
+  'MARGEM_EBIT',
+  'MARGEM_LIQUIDA',
+  'MARGEM_EBITDA',
+  'DIVIDA_LIQ_PL',
+  'DIVIDA_BRUTA_PL',
+  'LIQ_CORRENTE',
+  'LIQ_SECA',
+  'GIRO_ATIVO',
+] as const
+
+export type IndicadorTrimestral = (typeof INDICADORES_TRIMESTRAIS)[number]
+
+/** Ponto de uma série trimestral. `valor` null = não se aplica ou falta dado. */
+export interface PontoSerie {
+  ano: number
+  trimestre: number
+  valor: number | null
+  /** Data a partir da qual o indicador pode ser usado (AAAA-MM-DD). */
+  dataDivulgacao: string
+}
+
+/** Séries trimestrais por indicador. */
+export type SeriesTrimestrais = Partial<Record<IndicadorTrimestral, PontoSerie[]>>

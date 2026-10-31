@@ -14,10 +14,22 @@
 ## CVM Dados Abertos (F7)
 
 - **Arquivos:** DFP (demonstrações anuais) e ITR (informações trimestrais), publicados em CSV por ano e agrupados em arquivos zip.
-- **Plano de contas:** os dados usam códigos hierárquicos padronizados (ex.: `3.01` receita de venda de bens e serviços, `3.11` lucro líquido consolidado). **Validar** os códigos de cada indicador de `02-indicadores.md` com um arquivo real antes de escrever o parser.
-- **Exercício:** usar apenas a coluna do exercício corrente, e a versão mais recente da demonstração quando houver retificação.
-- **Vínculo com o ticker:** o arquivo traz o código CVM da companhia, não o ticker. O mapeamento ticker → código CVM vem do cadastro da CVM e é gravado na base, para não depender de busca em tempo de execução.
-- **Data de divulgação (P3):** usar a data de recebimento informada no arquivo. Se ela não existir no arquivo validado, usar o **prazo regulatório** como data conservadora: ITR em 45 dias após o fim do trimestre e DFP em 90 dias após o fim do exercício. A escolha fica registrada na implementação.
+- **Formato:** arquivos CSV separados por `;`, em **latin1** (Windows-1252). Decodificar antes de ler. Um arquivo por tipo de demonstração e por ano: `itr_cia_aberta_DRE_con_2025.csv`, `..._BPA_con_...`, `..._BPP_con_...`, `..._DFC_MI_con_...` (ITR) e `dfp_cia_aberta_DRE_con_...` (DFP). `con` é consolidado.
+- **Plano de contas e códigos:** conferidos com a PETR4 (ver tabela de contas em `02-indicadores.md`).
+- **Escala:** a coluna `ESCALA_MOEDA` vem como `MIL` nos arquivos verificados (PETR4, 2025). Os valores são multiplicados por 1.000 quando `MIL`. Outros valores de escala (ex.: `UNIDADE`) **não foram verificados**: a implementação deve recusar linhas com escala desconhecida, em vez de assumir. Sem essa conversão, os indicadores que misturam balanço e lucro ficam distorcidos.
+- **Exercício:** a coluna `ORDEM_EXERC` traz `ÚLTIMO` e `PENÚLTIMO`. Usar só `ÚLTIMO` (o exercício corrente da linha). O `PENÚLTIMO` é o ano anterior, já coberto por outra linha.
+- **Acumulados:** o ITR traz linhas de trimestre isolado e linhas acumuladas desde 1º de janeiro. O cálculo usa as acumuladas, pela fórmula de TTM em `02-indicadores.md`.
+- **Balanço (BPA e BPP):** o cabeçalho **não tem** a coluna `DT_INI_EXERC`. Cada linha é um saldo em uma data (`DT_FIM_EXERC` = `DT_REFER`). Nessas linhas, o início do período é a própria data de referência, que é o que a chave única de `DemonstracaoContabil` usa.
+- **Período (`DT_FIM_EXERC`):** `DT_REFER` é a data do documento, igual para as linhas `ÚLTIMO` e `PENÚLTIMO` de um mesmo arquivo. O período de cada linha está em `DT_FIM_EXERC`, e é ele que o cálculo usa como `dtRefer`. Usar `DT_REFER` faz o exercício anterior colidir com o atual e perder o balanço (defeito encontrado e corrigido na carga real de 2024 e 2025).
+- **Uma demonstração por companhia:** tickers da mesma companhia (ex.: PETR3 e PETR4, código CVM `009512`) compartilham as demonstrações. Elas são guardadas uma vez, com um ticker de referência por código, e os indicadores são calculados pelo código CVM e gravados para cada ticker. Um código sem demonstração no período (ex.: ASAI3, código `025372`, em 2024 e 2025) não gera indicadores, e o mapeamento deve ser revisado.
+- **Vínculo com o ticker:** o arquivo traz `CD_CVM` (código da companhia, com seis dígitos e zeros à esquerda, ex.: `009512`), não o ticker. O vínculo ticker → código CVM vem do cadastro de valores mobiliários (FCA) e está em `backend/lib/cvmMapeamento.ts`. Não se inventa vínculo: tickers sem código ficam em `NAO_MAPEADOS_CVM`.
+- **Procedimento do mapeamento (manual, em 2026-10-30):**
+  1. Baixar `fca_cia_aberta_2025.zip` em `https://dados.cvm.gov.br/dados/CIA_ABERTA/DOC/FCA/DADOS/`.
+  2. Em `fca_cia_aberta_valor_mobiliario_2025.csv`, pegar o `CNPJ_Companhia` de cada `Codigo_Negociacao` sem `Data_Fim_Negociacao`.
+  3. Em `fca_cia_aberta_geral_2025.csv`, pegar o `Codigo_CVM` do mesmo `CNPJ_Companhia`.
+  4. Os tickers sem correspondência na etapa 2 ou 3 vão para `NAO_MAPEADOS_CVM`.
+  Em 2026-10-30 o resultado foi 43 de 50 mapeados. Não mapeados: AXIA3, BPAC11, CMIN3, CPLE6, CRFB3, CSNA3 e MBRF3.
+- **Data de divulgação (P3):** o arquivo não traz a data de recebimento (verificado em 2026-10-30 nos arquivos de 2025). Usa-se, portanto, o **prazo regulatório** como data conservadora: ITR em 45 dias após o fim do trimestre e DFP em 3 meses (90 dias) após o fim do exercício. Assim a demonstração só entra nas decisões depois do prazo. Essa regra é mais restritiva que a divulgação real, o que é o lado seguro para evitar *look-ahead*.
 - **Validação:** cada linha passa por schema Zod antes da gravação (CLAUDE.md). Linhas com valor não numérico viram `null`, não zero.
 - **Carga:** job trimestral, com reprocessamento completo do ano corrente e incremental para os anos anteriores.
 

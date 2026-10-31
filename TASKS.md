@@ -729,9 +729,9 @@ Especificação: `specs/02-indicadores.md`, `specs/04-fontes-de-dados.md`, `spec
 - Montar o mapeamento ticker → código CVM dos 50 ativos e registrar os que não forem encontrados.
 
 **Critério de conclusão:**
-- [ ] Códigos de conta de cada indicador de `02-indicadores.md` confirmados no arquivo real
-- [ ] Mapeamento gerado, com lista de não mapeados (sem vínculo inventado)
-- [ ] Data de divulgação identificada no arquivo, ou regra de prazo regulatório documentada
+- [x] Códigos de conta de cada indicador de `02-indicadores.md` confirmados no arquivo real (PETR4, ITR e DFP de 2025)
+- [x] Mapeamento gerado, com lista de não mapeados (43 de 50; sem vínculo inventado)
+- [x] Data de divulgação identificada no arquivo, ou regra de prazo regulatório documentada (o arquivo não traz a data; usa-se o prazo regulatório)
 
 ---
 
@@ -746,8 +746,8 @@ Especificação: `specs/02-indicadores.md`, `specs/04-fontes-de-dados.md`, `spec
 - Migration com `npm run db:migrate`.
 
 **Critério de conclusão:**
-- [ ] Índices únicos criados conforme a especificação
-- [ ] `npm run db:deploy` aplica a migration em banco limpo
+- [x] Índices únicos criados conforme a especificação (verificado pelo SQL gerado com `prisma migrate diff`)
+- [x] `npm run db:deploy` aplica a migration em banco limpo (verificado no banco `ibovespa_teste`, criado a partir do zero)
 
 ---
 
@@ -763,9 +763,9 @@ Especificação: `specs/02-indicadores.md`, `specs/04-fontes-de-dados.md`, `spec
 - Gravar `DemonstracaoContabil` com `dataDivulgacao`.
 
 **Critério de conclusão:**
-- [ ] Teste com o arquivo de referência de T-024 produz os valores esperados
-- [ ] Linha inválida é registrada no log, sem interromper a carga
-- [ ] Reexecução não duplica registros (índice único)
+- [x] Teste com o arquivo de referência de T-024 produz os valores esperados
+- [x] Linha inválida é contada por motivo e registrada no log, sem interromper a carga
+- [x] Reexecução não duplica registros (reimportação dos mesmos arquivos grava 0 linhas)
 
 ---
 
@@ -781,9 +781,9 @@ Especificação: `specs/02-indicadores.md`, `specs/04-fontes-de-dados.md`, `spec
 - Job trimestral (BullMQ) que recalcula o ano corrente e atualiza os anteriores de forma incremental.
 
 **Critério de conclusão:**
-- [ ] Teste unitário para cada indicador com valores calculados à mão
-- [ ] Liquidez seca sem estoques retorna `null`, e não a liquidez corrente
-- [ ] Job roda manualmente sem erros e grava `IndicadorTrimestral`
+- [x] Teste unitário para cada indicador com valores calculados à mão
+- [x] Liquidez seca sem estoques retorna `null`, e não a liquidez corrente
+- [x] Job roda manualmente sem erros e grava `IndicadorTrimestral` (`npm run indicadores:calcular -- 2024 2025`: 0 falhas, 3.360 linhas. O agendamento no BullMQ fica para depois.)
 
 ---
 
@@ -798,9 +798,9 @@ Especificação: `specs/02-indicadores.md`, `specs/04-fontes-de-dados.md`, `spec
 - Painel na tela de detalhe com seleção de indicador e gráfico de série trimestral.
 
 **Critério de conclusão:**
-- [ ] Limite de 20 anos por requisição, validado com Zod
-- [ ] Cada ponto mostra a data de divulgação ao passar o mouse
-- [ ] Valores ausentes aparecem como "—", sem linha ligando zeros
+- [x] Limite de 20 anos por requisição, validado com Zod (testes de recorte; a validação de intervalo está na rota)
+- [x] Cada ponto mostra a data de divulgação ao passar o mouse (verificado no navegador com dados reais)
+- [x] Valores ausentes aparecem como "—", sem linha ligando zeros (verificado com PETR4 2024)
 
 ---
 

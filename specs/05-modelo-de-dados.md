@@ -12,16 +12,17 @@ Linha bruta da CVM, depois da validação.
 |---|---|---|
 | `id` | Int, PK | |
 | `ticker` | String | Ticker resolvido a partir do código CVM |
-| `cdCvm` | Int | Código da companhia na CVM |
+| `cdCvm` | String | Código da companhia na CVM, com 6 dígitos e zeros à esquerda (ex.: `009512`) |
 | `tipo` | String | `DFP` ou `ITR` |
 | `dtRefer` | DateTime | Data de referência do balanço (fim do período) |
+| `dtInicioExerc` | DateTime | Início do período: 1º de janeiro nos acumulados e no exercício anual; início do trimestre nas linhas trimestrais |
 | `versao` | Int | Versão da demonstração (retificações) |
 | `conta` | String | Código da conta (ex.: `3.11`) |
 | `descricao` | String | Nome da conta, como publicado |
 | `valor` | Float? | `null` quando o valor não é numérico |
 | `dataDivulgacao` | DateTime | Base da regra de não look-ahead (P3) |
 
-Índice único: `(cdCvm, dtRefer, conta, versao)`.
+Índice único: `(cdCvm, dtRefer, dtInicioExerc, conta, versao)`. Sem `dtInicioExerc`, o trimestre isolado e o acumulado do ano colidiriam na mesma chave, porque o ITR usa a mesma `dtRefer` nos dois.
 
 ### `IndicadorTrimestral`
 

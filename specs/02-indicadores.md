@@ -4,9 +4,34 @@ Este documento define as fórmulas. Cada indicador tem teste unitário com valor
 
 ## Convenções
 
-- **LL (Lucro Líquido)** é o lucro atribuível aos acionistas controladores.
-- **PL (Patrimônio Líquido)** é o atribuível aos controladores.
-- **Fluxo** (receita, EBIT, EBITDA, lucro): usa o acumulado dos **últimos 12 meses (TTM)**, que é a soma dos 4 últimos trimestres. O notebook de referência usava o valor trimestral isolado, o que distorce ROE e margens em trimestres sazonais. Esta especificação corrige isso.
+- **LL (Lucro Líquido)** é o lucro atribuível aos sócios da controladora: conta `3.11.01`, e não a `3.11` (que inclui os não controladores).
+- **PL (Patrimônio Líquido)** é o atribuível aos controladores: `2.03` menos `2.03.09` (participação dos acionistas não controladores).
+
+**Contas do plano de contas da CVM usadas no cálculo** (validadas com a PETR4 no ITR e DFP de 2025):
+
+| Dado | Conta | Observação |
+|---|---|---|
+| Receita | `3.01` | Receita de venda de bens e/ou serviços |
+| EBIT | `3.05` | Resultado antes do resultado financeiro e dos tributos |
+| D&A | `6.01.01.04` | Depreciação, depleção e amortização (DFC, método indireto) |
+| EBITDA | `3.05 + 6.01.01.04` | Calculado; não existe conta própria no plano de contas |
+| LL | `3.11.01` | Atribuído a sócios da controladora |
+| Ativo total | `1` | |
+| Ativo circulante | `1.01` | |
+| Caixa e equivalentes | `1.01.01` | |
+| Aplicações financeiras | `1.01.02` | |
+| Estoques | `1.01.04` | |
+| Passivo circulante | `2.01` | |
+| Dívida bruta | `2.01.04 + 2.02.01` | Empréstimos e financiamentos, circulante e não circulante |
+| Dívida líquida | dívida bruta − `1.01.01` − `1.01.02` | |
+| PL | `2.03 − 2.03.09` | |
+
+**Sinais:** a CVM publica custos e despesas com sinal negativo (ex.: custo `3.02` negativo). Os indicadores usam o valor como publicado, sem inverter sinal.
+- **Fluxo** (receita, EBIT, EBITDA, lucro): usa o acumulado dos **últimos 12 meses (TTM)**. O notebook de referência usava o valor trimestral isolado, o que distorce ROE e margens em trimestres sazonais. Esta especificação corrige isso.
+- **Cálculo do TTM a partir do acumulado do ano (YTD):** o ITR traz, para cada trimestre, o acumulado desde 1º de janeiro (`DT_INI_EXERC` = 1º de janeiro). Com `YTD(Y, q)` o acumulado do ano `Y` até o trimestre `q`, e `Anual(Y)` o exercício completo (DFP):
+  - `TTM(Y, q) = YTD(Y, q) + Anual(Y − 1) − YTD(Y − 1, q)`, para `q` = 1, 2 e 3;
+  - `TTM(Y, 4) = Anual(Y)`.
+  Assim não é preciso separar o trimestre isolado de cada acumulado.
 - **Estoque** (ativo, passivo, PL, dívida, caixa): usa o saldo no **fim do trimestre**.
 - Cada valor carrega a **data de divulgação** da demonstração que o originou (ver P3 e `03-ranking-carteira.md`).
 
