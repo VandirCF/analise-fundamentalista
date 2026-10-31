@@ -819,9 +819,9 @@ Especificação: `specs/03-ranking-carteira.md` (seções 1 a 3), ADR-003.
 - Filtro por data de divulgação ≤ primeiro pregão do ano de decisão (P3).
 
 **Critério de conclusão:**
-- [ ] Teste com três ativos de valores escolhidos à mão reproduz nota e alocação esperadas
-- [ ] Teste confirma que demonstração divulgada após a data de decisão não entra no cálculo
-- [ ] Ativo inelegível aparece em `avisos`, sem valor zero no ranking
+- [x] Teste com três ativos de valores escolhidos à mão reproduz nota e alocação esperadas
+- [x] Teste confirma que demonstração divulgada após a data de decisão não entra no cálculo
+- [x] Ativo inelegível aparece em `avisos`, sem valor zero no ranking
 
 ---
 
